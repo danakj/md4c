@@ -116,6 +116,10 @@ typedef enum MD_SPANTYPE {
      * Detail: Structure MD_SPAN_A_DETAIL. */
     MD_SPAN_A,
 
+    /* <a name="xxx" href="#xxx">...</a>
+     * Detail: Structure MD_SPAN_A_DETAIL. */
+    MD_SPAN_A_SELF,
+
     /* <img src="xxx">...</a>
      * Detail: Structure MD_SPAN_IMG_DETAIL.
      * Note: Image text can contain nested spans and even nested images.
@@ -316,6 +320,7 @@ typedef struct MD_SPAN_WIKILINK {
 #define MD_FLAG_LATEXMATHSPANS              0x1000  /* Enable $ and $$ containing LaTeX equations. */
 #define MD_FLAG_WIKILINKS                   0x2000  /* Enable wiki links extension. */
 #define MD_FLAG_UNDERLINE                   0x4000  /* Enable underline extension (and disables '_' for normal emphasis). */
+#define MD_FLAG_HEADERSELFLINKS             0x8000  /* Have ATX headers generate into a link to themselves. */
 
 #define MD_FLAG_PERMISSIVEAUTOLINKS         (MD_FLAG_PERMISSIVEEMAILAUTOLINKS | MD_FLAG_PERMISSIVEURLAUTOLINKS | MD_FLAG_PERMISSIVEWWWAUTOLINKS)
 #define MD_FLAG_NOHTML                      (MD_FLAG_NOHTMLBLOCKS | MD_FLAG_NOHTMLSPANS)
@@ -330,7 +335,7 @@ typedef struct MD_SPAN_WIKILINK {
  * extensions, bringing the dialect closer to the original, are implemented.
  */
 #define MD_DIALECT_COMMONMARK               0
-#define MD_DIALECT_GITHUB                   (MD_FLAG_PERMISSIVEAUTOLINKS | MD_FLAG_TABLES | MD_FLAG_STRIKETHROUGH | MD_FLAG_TASKLISTS)
+#define MD_DIALECT_GITHUB                   (MD_FLAG_PERMISSIVEAUTOLINKS | MD_FLAG_TABLES | MD_FLAG_STRIKETHROUGH | MD_FLAG_TASKLISTS | MD_FLAG_HEADERSELFLINKS)
 
 /* Parser structure.
  */

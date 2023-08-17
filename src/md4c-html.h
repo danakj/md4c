@@ -58,6 +58,9 @@
  */
 int md_html(const MD_CHAR* input, MD_SIZE input_size,
             void (*process_output)(const MD_CHAR*, MD_SIZE, void*),
+            void (*render_self_link)(const MD_CHAR* /*chars*/, MD_SIZE /*size*/, void* /*userdata*/, void* /*html*/,
+                  void (*render)(void* /*html*/, const MD_CHAR* /*chars*/, MD_SIZE /*size*/)),
+            void (*record_self_link)(const MD_CHAR* /*chars*/, MD_SIZE /*size*/, void* /*userdata*/),
             void* userdata, unsigned parser_flags, unsigned renderer_flags);
 
 

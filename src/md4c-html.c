@@ -45,11 +45,22 @@
     #define snprintf _snprintf
 #endif
 
+#define SELF_LINK_MAX_CHARS 1024
 
+typedef struct MD_SELF_LINK_tag MD_SELF_LINK;
+struct MD_SELF_LINK_tag {
+    char text[SELF_LINK_MAX_CHARS];
+    unsigned text_size;
+    unsigned count;
+    MD_SELF_LINK* next;
+};
 
 typedef struct MD_HTML_tag MD_HTML;
 struct MD_HTML_tag {
     void (*process_output)(const MD_CHAR*, MD_SIZE, void*);
+    void (*render_self_link)(const MD_CHAR*, MD_SIZE, void*, void* html,
+            void (*render)(void* html, const MD_CHAR* data, MD_SIZE size));
+    void (*record_self_link)(const MD_CHAR*, MD_SIZE, void*);
     void* userdata;
     unsigned flags;
     int image_nesting_level;
@@ -152,6 +163,22 @@ render_url_escaped(MD_HTML* r, const MD_CHAR* data, MD_SIZE size)
 
         beg = off;
     }
+}
+
+static void
+render_self_url_escaped(MD_HTML* r, const MD_CHAR* data, MD_SIZE size)
+{
+    if (r->render_self_link)
+        r->render_self_link(data, size, r->userdata, r, render_url_escaped);
+    else
+        render_url_escaped(r, data, size);
+}
+
+static void
+record_self_url(MD_HTML* r, const MD_CHAR* data, MD_SIZE size)
+{
+    if (r->render_self_link)
+        r->record_self_link(data, size, r->userdata);
 }
 
 static unsigned
@@ -338,6 +365,24 @@ render_open_a_span(MD_HTML* r, const MD_SPAN_A_DETAIL* det)
 }
 
 static void
+render_open_a_self_span(MD_HTML* r, const MD_SPAN_A_DETAIL* det)
+{
+    RENDER_VERBATIM(r, "<a name=\"");
+    render_attribute(r, &det->href, render_self_url_escaped);
+    RENDER_VERBATIM(r, "\" href=\"#");
+    render_attribute(r, &det->href, render_self_url_escaped);
+
+    render_attribute(r, &det->href, record_self_url);
+
+    if(det->title.text != NULL) {
+        RENDER_VERBATIM(r, "\" title=\"");
+        render_attribute(r, &det->title, render_html_escaped);
+    }
+
+    RENDER_VERBATIM(r, "\">");
+}
+
+static void
 render_open_img_span(MD_HTML* r, const MD_SPAN_IMG_DETAIL* det)
 {
     RENDER_VERBATIM(r, "<img src=\"");
@@ -460,6 +505,7 @@ enter_span_callback(MD_SPANTYPE type, void* detail, void* userdata)
         case MD_SPAN_STRONG:            RENDER_VERBATIM(r, "<strong>"); break;
         case MD_SPAN_U:                 RENDER_VERBATIM(r, "<u>"); break;
         case MD_SPAN_A:                 render_open_a_span(r, (MD_SPAN_A_DETAIL*) detail); break;
+        case MD_SPAN_A_SELF:            render_open_a_self_span(r, (MD_SPAN_A_DETAIL*) detail); break;
         case MD_SPAN_IMG:               render_open_img_span(r, (MD_SPAN_IMG_DETAIL*) detail); break;
         case MD_SPAN_CODE:              RENDER_VERBATIM(r, "<code>"); break;
         case MD_SPAN_DEL:               RENDER_VERBATIM(r, "<del>"); break;
@@ -489,6 +535,7 @@ leave_span_callback(MD_SPANTYPE type, void* detail, void* userdata)
         case MD_SPAN_STRONG:            RENDER_VERBATIM(r, "</strong>"); break;
         case MD_SPAN_U:                 RENDER_VERBATIM(r, "</u>"); break;
         case MD_SPAN_A:                 RENDER_VERBATIM(r, "</a>"); break;
+        case MD_SPAN_A_SELF:            RENDER_VERBATIM(r, "</a>"); break;
         case MD_SPAN_IMG:               /*noop, handled above*/ break;
         case MD_SPAN_CODE:              RENDER_VERBATIM(r, "</code>"); break;
         case MD_SPAN_DEL:               RENDER_VERBATIM(r, "</del>"); break;
@@ -531,9 +578,12 @@ debug_log_callback(const char* msg, void* userdata)
 int
 md_html(const MD_CHAR* input, MD_SIZE input_size,
         void (*process_output)(const MD_CHAR*, MD_SIZE, void*),
+        void (*render_self_link)(const MD_CHAR*, MD_SIZE, void*, void* html,
+                void (*render)(void* html, const MD_CHAR* data, MD_SIZE size)),
+        void (*record_self_link)(const MD_CHAR*, MD_SIZE, void*),
         void* userdata, unsigned parser_flags, unsigned renderer_flags)
 {
-    MD_HTML render = { process_output, userdata, renderer_flags, 0, { 0 } };
+    MD_HTML render = { process_output, render_self_link, record_self_link, userdata, renderer_flags, 0, { 0 } };
     int i;
 
     MD_PARSER parser = {
@@ -568,6 +618,8 @@ md_html(const MD_CHAR* input, MD_SIZE input_size,
         }
     }
 
-    return md_parse(input, input_size, &parser, (void*) &render);
+    int ret = md_parse(input, input_size, &parser, (void*) &render);
+
+    return ret;
 }
 

@@ -141,7 +141,7 @@ process_file(FILE* in, FILE* out)
      * md_renderer_t structure. */
     t0 = clock();
 
-    ret = md_html(buf_in.data, (MD_SIZE)buf_in.size, process_output, (void*) &buf_out,
+    ret = md_html(buf_in.data, (MD_SIZE)buf_in.size, process_output, NULL, NULL, (void*) &buf_out,
                     parser_flags, renderer_flags);
 
     t1 = clock();
