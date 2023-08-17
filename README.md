@@ -3,6 +3,15 @@
 [![Code Coverage Status (codecov.io)](https://img.shields.io/codecov/c/github/mity/md4c/master.svg?logo=codecov&label=code%20coverage)](https://codecov.io/github/mity/md4c)
 [![Coverity Scan Status](https://img.shields.io/coverity/scan/mity-md4c.svg?label=coverity%20scan)](https://scan.coverity.com/projects/mity-md4c)
 
+# FORK STATUS
+
+This is a fork of [md4c](https://github.com/mity/md4c) for use in
+[Subdoc](https://github.com/chromium/subspace). It has the following changes:
+
+* Adds a `MD_FLAG_HEADERSELFLINKS` parser option which turns ATX headers (`# Foo`) into named
+  anchors that link to themselves. This is also how Github's markdown works, so it is part
+  of the `MD_DIALECT_GITHUB` option. This is also supported by the md4c-html generator.
+
 
 # MD4C Readme
 

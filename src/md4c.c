@@ -4819,14 +4819,18 @@ md_process_leaf_block(MD_CTX* ctx, const MD_BLOCK* block)
         case MD_BLOCK_H: {
             OFF beg = ((const MD_LINE*)(block + 1))->beg;
             OFF end = ((const MD_LINE*)(block + 1))->end;
-            MD_CHECK(md_enter_leave_span_a(
-                ctx, /*enter*/1, MD_SPAN_A_SELF,
-                STR(beg), end - beg, FALSE, "", 0u));
+            if (ctx->parser.flags & MD_FLAG_PERMISSIVEATXHEADERS) {
+                MD_CHECK(md_enter_leave_span_a(
+                    ctx, /*enter*/1, MD_SPAN_A_SELF,
+                    STR(beg), end - beg, FALSE, "", 0u));
+            }
             MD_CHECK(md_process_normal_block_contents(ctx,
                             (const MD_LINE*)(block + 1), block->n_lines));
-            MD_CHECK(md_enter_leave_span_a(
-                ctx, /*enter*/0, MD_SPAN_A_SELF,
-                STR(beg), end - beg, FALSE, "", 0u));
+            if (ctx->parser.flags & MD_FLAG_PERMISSIVEATXHEADERS) {
+                MD_CHECK(md_enter_leave_span_a(
+                    ctx, /*enter*/0, MD_SPAN_A_SELF,
+                    STR(beg), end - beg, FALSE, "", 0u));
+            }
             break;
         }
 
